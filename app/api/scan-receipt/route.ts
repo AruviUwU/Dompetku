@@ -7,10 +7,12 @@ const ai = new GoogleGenAI({
 });
 
 // Daftar model fallback — dicoba urut dari atas
+export const maxDuration = 60; // detik; panggilan Gemini bisa lama dan mencoba beberapa model
+
 const MODELS = ["gemini-3.1-flash-lite", "gemini-3.8-flash", "gemini-flash"];
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_BYTES = 10 * 1024 * 1024;
+const MAX_BYTES = 4 * 1024 * 1024; // di bawah batas isi permintaan Vercel (4,5 MB); app memperkecil foto sebelum unggah
 
 const PROMPT = `
 Analisis gambar struk belanja ini.
@@ -107,7 +109,7 @@ export async function POST(request: Request) {
     // Tolak unggahan besar sebelum dibaca ke memori
     const declared = Number(request.headers.get("content-length") ?? 0);
     if (declared > MAX_BYTES + 100_000) {
-      return NextResponse.json({ error: "Ukuran foto maksimal 10 MB." }, { status: 413 });
+      return NextResponse.json({ error: "Ukuran foto maksimal 4 MB." }, { status: 413 });
     }
 
     const formData = await request.formData();
@@ -127,7 +129,7 @@ export async function POST(request: Request) {
       );
     }
     if (file.size > MAX_BYTES) {
-      return NextResponse.json({ error: "Ukuran foto maksimal 10 MB." }, { status: 413 });
+      return NextResponse.json({ error: "Ukuran foto maksimal 4 MB." }, { status: 413 });
     }
 
     // 2) Batas pemakaian per user (dan batas harian global) dihitung di database

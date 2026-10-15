@@ -10,6 +10,7 @@ import ImportPrompt from '@/components/import-prompt'
 import { useAuth } from '@/lib/use-auth'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client'
 import { readLocalData } from '@/lib/data-store'
+import { compressImage } from '@/lib/image'
 import { useDompetku } from '@/lib/use-dompetku'
 import { CATEGORIES, CATEGORY_COLORS, formatDate, formatIDR, initial, monthKey, monthLabel, normalizeDate, todayISO, type Transaction } from '@/lib/transactions'
 
@@ -226,7 +227,7 @@ function Dompetku({ userId, onSignOut }: { userId: string; onSignOut: () => void
   function selectReceipt(file?: File) {
     if (!file) return
     if (!file.type.startsWith('image/')) { setNotice('File harus berupa gambar.'); return }
-    if (file.size > 10 * 1024 * 1024) { setNotice('Ukuran foto maksimal 10 MB.'); return }
+    if (file.size > 30 * 1024 * 1024) { setNotice('Ukuran foto maksimal 30 MB.'); return }
     setNotice('')
     setReceiptFile(file)
     setReceiptPreview(URL.createObjectURL(file))
@@ -238,8 +239,10 @@ function Dompetku({ userId, onSignOut }: { userId: string; onSignOut: () => void
     setIsScanning(true)
     setScanStep('scanning')
     try {
+      const upload = await compressImage(receiptFile) // diperkecil dulu: batas unggahan di hosting sekitar 4,5 MB
+      if (upload.size > 4 * 1024 * 1024) throw Object.assign(new Error('Foto terlalu besar, coba foto lain.'), { status: 413 })
       const fd = new FormData()
-      fd.append('file', receiptFile)
+      fd.append('file', upload)
       const { data: sessionData } = await getSupabase()!.auth.getSession()
       const token = sessionData.session?.access_token
       if (!token) throw Object.assign(new Error('Sesi berakhir. Masuk lagi.'), { status: 401 })

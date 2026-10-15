@@ -3,3 +3,9 @@ pmOnFail: ignore
 minimumReleaseAgeExclude:
   - '@next/*'
   - next
+
+# Skrip build bawaan dependensi dinonaktifkan secara eksplisit (tidak dibutuhkan app ini).
+# Tanpa ini, pnpm di CI (Vercel) berhenti dengan ERR_PNPM_IGNORED_BUILDS.
+allowBuilds:
+  '@google/genai': false
+  protobufjs: false
