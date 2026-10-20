@@ -31,19 +31,20 @@ async def on_ready():
 # ── /link — Hubungkan akun Discord ke Dompetku Web ──────────────────────────
 @tree.command(name="link", description="Hubungkan akun Discord ke Dompetku Web")
 async def link_command(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
     discord_id = str(interaction.user.id)
 
-    # Cek apakah sudah terhubung
-    existing = get_user_id_from_discord(discord_id)
-    if existing:
-        await interaction.response.send_message(
-            "✅ Akun Discord kamu sudah terhubung ke Dompetku! Langsung kirim pesan untuk catat transaksi.",
-            ephemeral=True,
-        )
-        return
-
-    # Minta link token dari web app
     try:
+        # Cek apakah sudah terhubung
+        existing = get_user_id_from_discord(discord_id)
+        if existing:
+            await interaction.followup.send(
+                "✅ Akun Discord kamu sudah terhubung ke Dompetku! Langsung kirim pesan untuk catat transaksi.",
+                ephemeral=True,
+            )
+            return
+
+        # Minta link token dari web app
         async with httpx.AsyncClient(timeout=15) as http:
             res = await http.post(
                 f"{APP_URL}/api/discord/link",
@@ -55,7 +56,7 @@ async def link_command(interaction: discord.Interaction):
             )
 
         if res.status_code == 409:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "✅ Akun sudah terhubung!", ephemeral=True
             )
             return
@@ -74,10 +75,10 @@ async def link_command(interaction: discord.Interaction):
             color=0x34D399,
         )
         embed.set_footer(text="Dompetku • Kelola keuanganmu dengan lebih tenang")
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
     except Exception as e:
-        await interaction.response.send_message(
+        await interaction.followup.send(
             f"⚠️ Gagal membuat link: {e}", ephemeral=True
         )
 
@@ -87,43 +88,51 @@ async def link_command(interaction: discord.Interaction):
     name="unlink", description="Putuskan koneksi Discord dari akun Dompetku Web"
 )
 async def unlink_command(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
     discord_id = str(interaction.user.id)
-    from database import get_supabase
+    try:
+        from database import get_supabase
 
-    sb = get_supabase()
-    result = (
-        sb.table("discord_links").delete().eq("discord_id", discord_id).execute()
-    )
-    if result.data:
-        await interaction.response.send_message(
-            "✅ Akun Discord sudah diputus dari Dompetku. Kamu bisa hubungkan lagi kapan saja dengan `/link`.",
-            ephemeral=True,
+        sb = get_supabase()
+        result = (
+            sb.table("discord_links").delete().eq("discord_id", discord_id).execute()
         )
-    else:
-        await interaction.response.send_message(
-            "⚠️ Akun Discord kamu belum terhubung ke Dompetku. Gunakan `/link` untuk menghubungkan.",
-            ephemeral=True,
-        )
+        if result and getattr(result, "data", None) and len(result.data) > 0:
+            await interaction.followup.send(
+                "✅ Akun Discord sudah diputus dari Dompetku. Kamu bisa hubungkan lagi kapan saja dengan `/link`.",
+                ephemeral=True,
+            )
+        else:
+            await interaction.followup.send(
+                "⚠️ Akun Discord kamu belum terhubung ke Dompetku. Gunakan `/link` untuk menghubungkan.",
+                ephemeral=True,
+            )
+    except Exception as e:
+        await interaction.followup.send(f"⚠️ Gagal memutus koneksi: {e}", ephemeral=True)
 
 
 # ── /status — Cek status koneksi ─────────────────────────────────────────────
 @tree.command(name="status", description="Cek status koneksi akun Discord ke Dompetku")
 async def status_command(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
     discord_id = str(interaction.user.id)
-    user_id = get_user_id_from_discord(discord_id)
-    if user_id:
-        embed = discord.Embed(
-            title="✅ Terhubung",
-            description="Akun Discord kamu sudah terhubung ke Dompetku!\nLangsung kirim pesan untuk catat transaksi.",
-            color=0x34D399,
-        )
-    else:
-        embed = discord.Embed(
-            title="❌ Belum Terhubung",
-            description="Akun Discord kamu belum terhubung.\nGunakan `/link` untuk menghubungkan.",
-            color=0xEF4444,
-        )
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    try:
+        user_id = get_user_id_from_discord(discord_id)
+        if user_id:
+            embed = discord.Embed(
+                title="✅ Terhubung",
+                description="Akun Discord kamu sudah terhubung ke Dompetku!\nLangsung kirim pesan untuk catat transaksi.",
+                color=0x34D399,
+            )
+        else:
+            embed = discord.Embed(
+                title="❌ Belum Terhubung",
+                description="Akun Discord kamu belum terhubung.\nGunakan `/link` untuk menghubungkan.",
+                color=0xEF4444,
+            )
+        await interaction.followup.send(embed=embed, ephemeral=True)
+    except Exception as e:
+        await interaction.followup.send(f"⚠️ Terjadi kesalahan: {e}", ephemeral=True)
 
 
 # ── on_message — Proses transaksi dari chat ──────────────────────────────────

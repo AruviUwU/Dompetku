@@ -33,16 +33,18 @@ def init_db():
 
 def get_user_id_from_discord(discord_id: str) -> Optional[str]:
     """Cari Supabase user_id dari Discord ID via tabel discord_links."""
-    sb = get_supabase()
-    result = (
-        sb.table("discord_links")
-        .select("user_id")
-        .eq("discord_id", str(discord_id))
-        .maybe_single()
-        .execute()
-    )
-    if result.data:
-        return result.data["user_id"]
+    try:
+        sb = get_supabase()
+        result = (
+            sb.table("discord_links")
+            .select("user_id")
+            .eq("discord_id", str(discord_id))
+            .execute()
+        )
+        if result and getattr(result, "data", None) and len(result.data) > 0:
+            return result.data[0]["user_id"]
+    except Exception as e:
+        print(f"⚠️ Error lookup discord_links: {e}")
     return None
 
 
@@ -109,14 +111,18 @@ def get_budget_status(user_id: str, category: str) -> Dict[str, Any]:
     spent = sum(row["amount"] for row in (result.data or []))
 
     # Ambil monthly_budget dari profile
-    profile = (
-        sb.table("profiles")
-        .select("monthly_budget")
-        .eq("id", user_id)
-        .maybe_single()
-        .execute()
-    )
-    total_budget = profile.data["monthly_budget"] if profile.data else 0
+    total_budget = 0
+    try:
+        profile = (
+            sb.table("profiles")
+            .select("monthly_budget")
+            .eq("id", user_id)
+            .execute()
+        )
+        if profile and getattr(profile, "data", None) and len(profile.data) > 0:
+            total_budget = profile.data[0].get("monthly_budget") or 0
+    except Exception as e:
+        print(f"⚠️ Error lookup profile: {e}")
     # Budget per kategori = total / 5 (ada 5 kategori)
     limit_amt = total_budget // 5 if total_budget > 0 else 500000
 
