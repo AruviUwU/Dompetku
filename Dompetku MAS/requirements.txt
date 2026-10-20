@@ -1,0 +1,8 @@
+langgraph
+langchain-google-genai
+langchain-core
+pydantic
+python-dotenv
+discord.py
+supabase
+httpx
