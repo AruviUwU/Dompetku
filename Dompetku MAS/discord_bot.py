@@ -6,7 +6,7 @@ from discord import app_commands
 from dotenv import load_dotenv
 import httpx
 from main import process_message
-from database import get_user_id_from_discord
+from database import get_user_id_from_discord, get_server_channel, set_server_channel, remove_server_channel
 
 load_dotenv()
 
@@ -135,11 +135,108 @@ async def status_command(interaction: discord.Interaction):
         await interaction.followup.send(f"⚠️ Terjadi kesalahan: {e}", ephemeral=True)
 
 
+# ── /setchannel — Set channel untuk bot (admin only) ─────────────────────────
+@tree.command(
+    name="setchannel",
+    description="Set channel ini sebagai channel Dompetku (Admin only)",
+)
+@app_commands.default_permissions(manage_guild=True)
+async def setchannel_command(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
+
+    if not interaction.guild:
+        await interaction.followup.send(
+            "⚠️ Perintah ini hanya bisa dipakai di server, bukan DM.", ephemeral=True
+        )
+        return
+
+    guild_id = str(interaction.guild.id)
+    channel_id = str(interaction.channel_id)
+    set_by = str(interaction.user.id)
+
+    success = set_server_channel(guild_id, channel_id, set_by)
+    if success:
+        embed = discord.Embed(
+            title="✅ Channel Dompetku Aktif!",
+            description=(
+                f"Bot Dompetku sekarang aktif di <#{channel_id}>.\n\n"
+                f"Member bisa mulai catat transaksi di channel ini.\n"
+                f"Pastikan mereka sudah `/link` akun terlebih dahulu."
+            ),
+            color=0x34D399,
+        )
+        embed.set_footer(text="Gunakan /removechannel untuk menonaktifkan")
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+        # Kirim notifikasi publik di channel
+        public_embed = discord.Embed(
+            title="🎉 Dompetku Aktif di Channel Ini!",
+            description=(
+                "Bot Dompetku sudah aktif di channel ini.\n\n"
+                "**Cara mulai:**\n"
+                "1️⃣ Ketik `/link` untuk hubungkan akun Discord ke Dompetku\n"
+                "2️⃣ Langsung kirim pesan untuk catat transaksi!\n\n"
+                "Contoh: *\"Beli kopi 25rb\"* atau *\"Gajian 5jt\"*"
+            ),
+            color=0x34D399,
+        )
+        await interaction.channel.send(embed=public_embed)
+    else:
+        await interaction.followup.send(
+            "⚠️ Gagal mengatur channel. Coba lagi nanti.", ephemeral=True
+        )
+
+
+# ── /removechannel — Hapus channel setting (admin only) ──────────────────────
+@tree.command(
+    name="removechannel",
+    description="Nonaktifkan bot Dompetku dari server ini (Admin only)",
+)
+@app_commands.default_permissions(manage_guild=True)
+async def removechannel_command(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
+
+    if not interaction.guild:
+        await interaction.followup.send(
+            "⚠️ Perintah ini hanya bisa dipakai di server, bukan DM.", ephemeral=True
+        )
+        return
+
+    guild_id = str(interaction.guild.id)
+    success = remove_server_channel(guild_id)
+    if success:
+        embed = discord.Embed(
+            title="👋 Dompetku Dinonaktifkan",
+            description=(
+                "Bot Dompetku sudah dinonaktifkan dari server ini.\n\n"
+                "Gunakan `/setchannel` di channel manapun untuk mengaktifkan kembali."
+            ),
+            color=0xFBBF24,
+        )
+        await interaction.followup.send(embed=embed, ephemeral=True)
+    else:
+        await interaction.followup.send(
+            "⚠️ Gagal menghapus pengaturan. Coba lagi nanti.", ephemeral=True
+        )
+
+
 # ── on_message — Proses transaksi dari chat ──────────────────────────────────
 @client.event
 async def on_message(message: discord.Message):
     if message.author.bot:
         return
+
+    # ── Channel guard: hanya proses pesan di channel yang sudah di-set ────
+    if message.guild:
+        # Pesan di server → cek apakah channel sudah diatur
+        allowed_channel = get_server_channel(str(message.guild.id))
+        if not allowed_channel:
+            # Server belum setup, abaikan semua pesan (slash commands tetap jalan)
+            return
+        if str(message.channel.id) != allowed_channel:
+            # Pesan di channel lain, abaikan
+            return
+    # Jika DM (message.guild is None), langsung proses tanpa channel guard
 
     discord_id = str(message.author.id)
     user_id = get_user_id_from_discord(discord_id)

@@ -99,5 +99,25 @@ python discord_bot.py
 
 ---
 
+## 🤖 Gunakan Bot Discord di Servermu
+
+Invite bot Dompetku ke server Discord kamu:
+
+👉 **[Invite Bot Dompetku](https://discord.com/oauth2/authorize?client_id=1561585645426573312&permissions=2147567616&integration_type=0&scope=bot)**
+
+### Setup (Admin Server)
+1. Klik link invite di atas dan pilih server tujuan
+2. Di channel yang diinginkan, ketik `/setchannel` untuk mengaktifkan bot di channel tersebut
+3. Bot akan mengirim pesan konfirmasi — member sudah bisa mulai pakai!
+
+### Untuk Member
+1. Ketik `/link` untuk menghubungkan akun Discord ke Dompetku Web
+2. Langsung kirim pesan seperti *"Beli kopi 25rb"* atau *"Gajian 5jt"* di channel yang sudah di-set
+3. Cek status koneksi dengan `/status`
+
+> **Catatan:** Bot hanya akan merespons di channel yang sudah di-set oleh admin. Slash commands (`/link`, `/status`, dll) tetap bisa dipakai di channel manapun.
+
+---
+
 ## 📄 Lisensi
 Dibuat dengan ❤️ untuk membantu pengelolaan keuangan pribadi menjadi lebih mudah, tenang, dan cerdas.

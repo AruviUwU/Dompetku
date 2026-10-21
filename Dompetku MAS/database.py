@@ -147,6 +147,52 @@ def set_budget_limit(user_id: str, category: str, new_limit: int) -> Dict[str, A
     return get_budget_status(user_id, category)
 
 
+def get_server_channel(guild_id: str) -> Optional[str]:
+    """Ambil channel_id yang sudah di-set untuk server tertentu."""
+    try:
+        sb = get_supabase()
+        result = (
+            sb.table("server_channels")
+            .select("channel_id")
+            .eq("guild_id", str(guild_id))
+            .execute()
+        )
+        if result and getattr(result, "data", None) and len(result.data) > 0:
+            return result.data[0]["channel_id"]
+    except Exception as e:
+        print(f"⚠️ Error lookup server_channels: {e}")
+    return None
+
+
+def set_server_channel(guild_id: str, channel_id: str, set_by: str) -> bool:
+    """Set atau update channel untuk server. Return True jika berhasil."""
+    try:
+        sb = get_supabase()
+        sb.table("server_channels").upsert(
+            {
+                "guild_id": str(guild_id),
+                "channel_id": str(channel_id),
+                "set_by": str(set_by),
+            },
+            on_conflict="guild_id",
+        ).execute()
+        return True
+    except Exception as e:
+        print(f"⚠️ Error set server_channels: {e}")
+        return False
+
+
+def remove_server_channel(guild_id: str) -> bool:
+    """Hapus channel setting untuk server. Return True jika berhasil."""
+    try:
+        sb = get_supabase()
+        sb.table("server_channels").delete().eq("guild_id", str(guild_id)).execute()
+        return True
+    except Exception as e:
+        print(f"⚠️ Error remove server_channels: {e}")
+        return False
+
+
 def get_monthly_summary(user_id: str) -> Dict[str, Any]:
     """Ringkasan pemasukan/pengeluaran bulan ini dari Supabase."""
     sb = get_supabase()
