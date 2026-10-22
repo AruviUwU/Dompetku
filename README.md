@@ -41,7 +41,7 @@ Sistem ini membantu pengguna mencatat pengeluaran, memantau batas anggaran (*bud
 | :--- | :--- | :--- |
 | **Frontend Web** | Next.js 16 (App Router), React, Tailwind CSS, Lucide | [Vercel](https://vercel.com) |
 | **Multi-Agent System** | Python 3.11, LangGraph, LangChain, Discord.py | [Fly.io](https://fly.io) |
-| **Model AI** | Google Gemini (`gemini-2.5-flash`), Gemini Vision | Google AI Studio |
+| **Model AI** | Google Gemini (`gemini-3.1-flash-lite`), Gemini Vision | Google AI Studio |
 | **Database & Auth** | PostgreSQL, Row Level Security, Supabase Auth | [Supabase](https://supabase.com) |
 
 ---
