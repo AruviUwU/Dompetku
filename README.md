@@ -19,22 +19,15 @@ Sistem ini membantu pengguna mencatat pengeluaran, memantau batas anggaran (*bud
 
 ## 🏗️ Arsitektur Teknologi
 
-```text
-               ┌────────────────────────────────────────────────────────┐
-               │                     PENGGUNA                           │
-               └──────────────┬──────────────────────────┬──────────────┘
-                              │                          │
-                    (Web Dashboard)              (Chat Discord)
-                              ▼                          ▼
-               ┌───────────────────────┐  /link   ┌───────────────────────┐
-               │    Next.js 16 Web     │◄────────►│   Bot Discord (MAS)   │
-               │   (Hosting: Vercel)   │  (HMAC)  │   (Hosting: Fly.io)   │
-               └───────────┬───────────┘          └───────────┬───────────┘
-                           │                                  │
-                           │       ┌──────────────────┐       │
-                           └──────►│     Supabase     │◄──────┘
-                                   │ (PostgreSQL+RLS) │
-                                   └──────────────────┘
+```mermaid
+graph TD
+    User([👤 PENGGUNA]) --> Web["🌐 Next.js 16 Web\n(Hosting: Vercel)"]
+    User --> Bot["🤖 Bot Discord (MAS)\n(Hosting: Fly.io)"]
+
+    Web <-->|"/link (HMAC)"| Bot
+
+    Web --> DB[("🗄️ Supabase\n(PostgreSQL+RLS)")]
+    Bot --> DB
 ```
 
 | Komponen | Teknologi | Hosting / Platform |
