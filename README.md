@@ -49,7 +49,7 @@ Sistem ini membantu pengguna mencatat pengeluaran, memantau batas anggaran (*bud
 ## 🤖 Multi-Agent Workflow (LangGraph)
 
 Dokumentasi lengkap mengenai cara kerja 5 agen AI dapat dilihat pada:
-👉 [**Dokumentasi Lengkap Multi-Agent System (Dompetku MAS)**](file:///c:/Users/Aruvi/Documents/Dompetku/Dompetku%20MAS/README.md)
+👉 [**Dokumentasi Lengkap Multi-Agent System (Dompetku MAS)**](./Dompetku%20MAS/README.md)
 
 1. **Supervisor Agent:** Menganalisis niat user dan mengarahkan ke agen yang tepat.
 2. **Parser Agent:** Mengekstrak nominal, tipe, dan kategori dari bahasa santai/gaul (*"beli nasgor 25rb"*).
