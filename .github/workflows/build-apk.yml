@@ -38,7 +38,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install Node Dependencies
-        run: pnpm install --frozen-lockfile=false
+        run: pnpm install
 
       - name: Sync Capacitor Android Project
         run: npx cap sync android
