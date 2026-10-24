@@ -1,6 +1,6 @@
 # 👛 Dompetku — AI Financial Assistant & Omnichannel Expense Tracker
 
-**Dompetku** adalah platform manajemen dan pelacakan keuangan pribadi berbasis **Multi-Agent System (AI)** yang menghubungkan **Web Application** modern dan **Bot Discord 24/7**.
+**Dompetku** adalah platform manajemen dan pelacakan keuangan pribadi berbasis **Multi-Agent System (AI)** yang menghubungkan **Web Application** modern, **Aplikasi Mobile Android (APK)**, dan **Bot Discord 24/7**.
 
 Sistem ini membantu pengguna mencatat pengeluaran, memantau batas anggaran (*budget limit*), membaca struk belanja otomatis via OCR kamera, dan mendapatkan konsultasi keuangan secara otomatis melalui percakapan santai.
 
@@ -9,11 +9,12 @@ Sistem ini membantu pengguna mencatat pengeluaran, memantau batas anggaran (*bud
 ## ⚡ Fitur Utama
 
 - 🤖 **Multi-Agent AI System (LangGraph + Gemini):** Kolaborasi 5 agen AI khusus (Supervisor, Parser NLP, Budget Guard, Budget Manager, dan Financial Advisor) untuk memproses teks bahasa Indonesia informal menjadi pencatatan keuangan terstruktur.
-- 📱 **Omnichannel Sync (Discord ↔ Web):** Catat transaksi lewat chat Discord saat bepergian, atau pantau grafik analisis keuangan di dashboard web. Semua data tersinkronisasi *real-time*.
-- 📸 **Scan Struk Belanja (AI Vision OCR):** Unggah foto struk belanjaan untuk mengekstrak toko, tanggal, total nominal, dan kategori secara otomatis menggunakan Gemini Vision.
+- 📱 **Omnichannel Sync (Android ↔ Discord ↔ Web):** Akses lewat aplikasi native Android di ponsel, catat transaksi via chat Discord saat bepergian, atau pantau visualisasi analisis grafik di dashboard web. Semua data tersinkronisasi *real-time*.
+- 📸 **Scan Struk Belanja (AI Vision OCR):** Unggah atau foto struk belanjaan langsung dari kamera HP untuk mengekstrak nama toko, tanggal, nominal, dan kategori secara otomatis menggunakan Gemini Vision.
 - 🛡️ **Budget Guard & Anomaly Detection:** Sistem proteksi otomatis yang mengingatkan pengguna jika pengeluaran kategori tertentu telah mendekati atau melebihi limit bulanan.
 - 🔒 **Keamanan Terjamin (Supabase Auth & RLS):** Database PostgreSQL dengan *Row Level Security* (RLS) memastikan setiap pengguna hanya memiliki akses ke data keuangannya sendiri.
 - 🔗 **Penautan Akun Aman (Stateless HMAC Token):** Menghubungkan bot Discord ke akun web menggunakan tanda tangan digital kriptografis HMAC-SHA256 yang aman dan kompatibel dengan arsitektur serverless.
+- 🚀 **Automated CI/CD APK Build:** Build file APK Android otomatis di cloud menggunakan GitHub Actions tanpa membutuhkan instalasi Android Studio lokal.
 
 ---
 
@@ -21,9 +22,11 @@ Sistem ini membantu pengguna mencatat pengeluaran, memantau batas anggaran (*bud
 
 ```mermaid
 graph TD
-    User([👤 PENGGUNA]) --> Web["🌐 Next.js 16 Web\n(Hosting: Vercel)"]
+    User([👤 PENGGUNA]) --> Android["📱 Android App (APK)\n(Capacitor 8)"]
+    User --> Web["🌐 Next.js 16 Web\n(Hosting: Vercel)"]
     User --> Bot["🤖 Bot Discord (MAS)\n(Hosting: Fly.io)"]
 
+    Android -.->|"Native WebView & Camera"| Web
     Web <-->|"/link (HMAC)"| Bot
 
     Web --> DB[("🗄️ Supabase\n(PostgreSQL+RLS)")]
@@ -32,10 +35,28 @@ graph TD
 
 | Komponen | Teknologi | Hosting / Platform |
 | :--- | :--- | :--- |
-| **Frontend Web** | Next.js 16 (App Router), React, Tailwind CSS, Lucide | [Vercel](https://vercel.com) |
+| **Frontend Web** | Next.js 16 (App Router), React 19, Tailwind CSS v4, Lucide | [Vercel](https://vercel.com) |
+| **Mobile App (Android)** | Capacitor.js 8, Android SDK, Gradle, GitHub Actions | APK Artifacts (GitHub CI) |
 | **Multi-Agent System** | Python 3.11, LangGraph, LangChain, Discord.py | [Fly.io](https://fly.io) |
 | **Model AI** | Google Gemini (`gemini-3.1-flash-lite`), Gemini Vision | Google AI Studio |
 | **Database & Auth** | PostgreSQL, Row Level Security, Supabase Auth | [Supabase](https://supabase.com) |
+
+---
+
+## 📱 Aplikasi Android (APK)
+
+Dompetku mendukung instalasi native di smartphone Android menggunakan **Capacitor.js** yang terhubung langsung ke deployment produksi Vercel (`https://dompetku-hazel.vercel.app`).
+
+### Keunggulan:
+1. **Over-The-Air (OTA) Auto-Update:** Setiap pembaruan tampilan di web otomatis tampil di aplikasi HP tanpa perlu build ulang APK.
+2. **Native Device Access:** Terintegrasi dengan izin kamera dan media storage untuk fitur pemindaian nota struk.
+3. **Cloud Build Otomatis:** File APK di-build otomatis di cloud oleh GitHub Actions dalam ~2 menit.
+
+### Cara Download File APK:
+1. Masuk ke tab **[Actions](https://github.com/AruviUwU/Dompetku/actions)** di repositori GitHub.
+2. Pilih workflow run terbaru pada **Build Android APK**.
+3. Di bagian bawah (*Artifacts*), klik dan unduh **`Dompetku-Debug-APK`**.
+4. Ekstrak file zip dan install file `app-debug.apk` di smartphone Android Anda.
 
 ---
 
@@ -54,13 +75,13 @@ Dokumentasi lengkap mengenai cara kerja 5 agen AI dapat dilihat pada:
 
 ## 🚀 Memulai Proyek (Local Development)
 
-### 1. Web Application (Next.js)
+### 1. Web Application (Next.js) & Capacitor
 ```bash
 # Masuk ke root directory
 cd Dompetku
 
-# Install dependencies
-npm install
+# Install dependencies (pnpm)
+pnpm install
 
 # Buat file .env.local dan isi:
 # GEMINI_API_KEY=...
@@ -71,7 +92,10 @@ npm install
 # NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 # Jalankan dev server
-npm run dev
+pnpm dev
+
+# Sinkronisasi konfigurasi Capacitor Android (opsional)
+pnpm cap:sync
 ```
 
 Buka [http://localhost:3000](http://localhost:3000) di browser.
